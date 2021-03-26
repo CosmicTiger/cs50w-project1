@@ -38,3 +38,5 @@ nosetests.xml
 venv
 app.db
 application.log*
+
+flask_session/

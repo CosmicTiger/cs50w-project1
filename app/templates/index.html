@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Hi, {{ user.username }}!</h1>
+    {% for book in books %}
+    <div>
+        <div>
+            <h2>{{ book.title }}</h2>
+            <h3>{{ book.author }}</h3>
+        </div>
+        <div>
+            <p>Reviews: {{ book.review_count }}</p>
+            <p>Average Score: {{ book.average_score }}</p>
+        </div>
+        <span>Published: {{ book.year }}</span>
+        <span>ISBN: {{ book.isbn }}</span>
+    </div>
+    {% endfor %}
+{% endblock %}
