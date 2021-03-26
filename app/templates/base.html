@@ -13,9 +13,11 @@
     </head>
     <body>
         <header>
-            CS50x-Reads: <a href="/home">Home</a>
+            CS50x-Reads:
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('login') }}">Login</a>
         </header>
-        {% block content %} 
+        {% block content %}
         {% endblock %}
     </body>
 </html>
