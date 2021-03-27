@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, session, request
+from flask import render_template, flash, redirect, url_for, jsonify, session, request
 from flask_login import current_user, login_user
 
 from werkzeug.exceptions import default_exceptions
@@ -125,7 +125,7 @@ def book(isbn):
 
         return render_template("book.html", title=book_info[0]['title'], book=book_info, rates=rates)
 
-@app.route("/api/<isbn>", method=['GET'])
+@app.route("/api/<isbn>", methods=['GET'])
 @login_required
 def api_call(isbn):
     """ API Call """
