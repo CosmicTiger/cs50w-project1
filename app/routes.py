@@ -42,6 +42,88 @@ def search():
 
     return render_template("index.html", title="Home - Books Results", user=session.get("username"), books=books)
 
+@app.route("/book/<isbn>", methods=['GET', 'POST'])
+@login_required
+def book(isbn):
+    """ Save users review and load same page with reviews updated. """
+
+    if request.method == "POST":
+
+        # Save current user info
+        current_user = session["user_id"]
+
+        # Fetch form data
+        rating = request.form.get("rating")
+        comment = request.form.get("comment")
+
+        # Search id_book by ISBN
+        row = db.execute("SELECT id_book FROM books WHERE isbn = :isbn",
+                            { "isbn": isbn })
+
+        # Save id into a variable
+        book_parsing = row.fetchone()
+        book = book_parsing[0]
+
+        # Check for user submission (ONLY 1 review(rates) user is allowed for books)
+        row2 = db.execute("SELECT * from rates WHERE id_user = :id_user AND id_book = :id_book",
+                            {
+                                "id_user": current_user,
+                                "id_book": book
+                            }
+                        )
+
+        if row2.rowcount == 1:
+            flash('You already submitted a review for this book', 'warning')
+            return redirect("/book/"+ isbn)
+
+        # Convert rating to save the registry
+        rating = int(rating)
+
+        db.execute("INSERT INTO rates (id_user, id_book, comment, rating) VALUES (:id_user, :id_book, :comment, :rating)",
+                        {
+                            "id_user": current_user,
+                            "id_book": book,
+                            "comment": comment,
+                            "rating": rating
+                        }
+                    )
+        db.commit()
+
+        flash('Review has been submitted!', 'info')
+        return redirect("/book/"+isbn)
+
+    # If is a GET method then it will take the book with its ISBN an redirect to the page
+    else:
+
+        row = db.execute("SELECT isbn, title, author, year FROM books WHERE isbn = :isbn",
+                            {
+                                "isbn": isbn
+                            }
+                        )
+
+        book_info = row.fetchall()
+
+        """ User's review """
+        # Search id_books by ISBN
+        row = db.execute("SELECT id_book FROM books WHERE isbn = :isbn",
+                            {
+                                "isbn": isbn
+                            }
+                        )
+
+        # Save the id into a variable
+        parsed_book = row.fetchone()
+        book = parsed_book[0]
+
+        # Fetch all reviews for that book
+        results = db.execute("SELECT users.username, comment, rating, to_char(published_time, 'DD Mon YY - HH24:MI:SS') as time FROM users INNER JOIN rates ON users.id_user = rates.id_user WHERE id_book = :book ORDER BY time",
+                                {
+                                    "book": book
+                                }
+                            )
+        rates = results.fetchall()
+
+        return render_template("book.html", title=book_info[0]['title'], book=book_info, rates=rates)
 
 
 @app.route("/login", methods=["GET", "POST"])
