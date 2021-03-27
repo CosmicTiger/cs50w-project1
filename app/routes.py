@@ -6,46 +6,43 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import app, db
 from app.forms import LoginForm
+from app.helpers import login_required
 
 @app.route('/')
 @app.route('/index')
+@login_required
 def index():
-    id_current_user = session.get("id_user")
-    current_user = session.get("username")
-    user = [
-        {
-            "id_user": id_current_user,
-            "username": current_user
-        }
-    ]
+    """ Show home with search box """
+    return render_template('index.html', title='Home', user=session.get("username"))
 
-    books = [
-        {
-            "title": "Memory",
-            "author": "Doug Lloyd",
-            "year": 2015,
-            "isbn": "1632168146",
-            "review_count": 28,
-            "average_score": 5.0
-        },
-        {
-            "title": "Memory2",
-            "author": "Doug Lloyd",
-            "year": 2015,
-            "isbn": "1632168146",
-            "review_count": 28,
-            "average_score": 5.0
-        },
-        {
-            "title": "Memory3",
-            "author": "Doug Lloyd",
-            "year": 2015,
-            "isbn": "1632168146",
-            "review_count": 28,
-            "average_score": 5.0
-        },
-    ]
-    return render_template('index.html', title='Home', user=user, books=books)
+@app.route("/search", methods=["GET"])
+@login_required
+def search():
+    """ Fetch all books """
+    book_request = request.args.get("book")
+
+    # if a book request was not provided, it will fail
+    if not book_request:
+        return render_template("error.html", message="you must provide a book.", code=400)
+
+    # parse the input and prepare it for the querying
+    query = "%" + book_request + "%"
+
+    query = query.title()
+
+    rows = db.execute("SELECT isbn, title, author, year FROM books WHERE isbn LIKE :query OR title LIKE :query OR author LIKE :query LIMIT 20",
+                        { "query": query }
+                    )
+    # if any book wasn't found
+    if rows.rowcount == 0:
+        return render_template("error.html", message="We can't find books with that description", code=500)
+
+    # fetch all results
+    books = rows.fetchall()
+
+    return render_template("index.html", title="Home - Books Results", user=session.get("username"), books=books)
+
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
