@@ -125,6 +125,26 @@ def book(isbn):
 
         return render_template("book.html", title=book_info[0]['title'], book=book_info, rates=rates)
 
+@app.route("/api/<isbn>", method=['GET'])
+@login_required
+def api_call(isbn):
+    """ API Call """
+    row = db.execute("SELECT title, author, year, isbn, COUNT(rates.id_rate) as review_count, AVG(rates.rating) as average_score FROM books INNER JOIN rates ON books.id_book = rates.id_book WHERE isbn = :isbn GROUP BY title, author, year, isbn",
+            {
+                "isbn": isbn
+            }
+        )
+
+    if row.rowcount != 1:
+        return jsonify({ "Error": "Invalid book ISBN"}), 422
+
+    tmp = row.fetchone()
+
+    result = dict(tmp.items())
+
+    result['average_score'] = float('%2.f'%(result['average_score']))
+
+    return jsonify(result)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
