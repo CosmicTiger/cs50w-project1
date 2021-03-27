@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Welcome, {{ user }}</h2>
+    <form action="/search" method="GET">
+        <div class="form-group">
+            <input type="text" class="form-control" name="book" autofocus aria-describedly="bookSearch" placeholder="ISBN, Title or Author">
+            <span id="bookSearch" class="form-text text-muted">Example: 03755082325, Cosmos or Carl Sagan</span>
+        </div>
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+
+    <div class="container results-container">
+        {% if not books %}
+            <h3>There's no books, yet</h3>
+        {% endif %}
+
+        {% if books %}
+            <h3>Search Results</h3>
+        {% endif %}
+
+        {% for book in books %}
+            <div class="Card card border-primary mb-3">
+                <div class="Card-title">
+                    <h3 class="card-title">{{ book['title'] }}</h3>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title">Author: {{ book['author'] }}</h4>
+                    <p class="card-text">ISBN: {{ book['isbn'] }}</p>
+                    <p class="card-text">Published: {{ book['year'] }}</p>
+                </div>
+                <div class="card-footer">
+                    <a href="/book/{{book['isbn']}}" class="card-link">Go to book details</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}
